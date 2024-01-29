@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 
 class ItemDetailPage extends StatelessWidget {
@@ -5,7 +7,8 @@ class ItemDetailPage extends StatelessWidget {
   final String itemImage;
   final double itemPrice;
 
-  ItemDetailPage({
+  const ItemDetailPage({
+    super.key,
     required this.itemName,
     required this.itemImage,
     required this.itemPrice,
@@ -14,56 +17,136 @@ class ItemDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.background,
-        title: Text(
-          itemName,
-          style: TextStyle(
-            color: Colors.white,
-            fontFamily: "BebasNeue",
-            fontSize: 24,
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          backgroundColor: Theme.of(context).colorScheme.background,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
           ),
         ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Image.asset(
-              itemImage,
-              width: 200,
-              height: 200,
-              fit: BoxFit.cover,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1 / 1,
+                  child: Image.asset(
+                    itemImage,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  itemName,
+                  style: const TextStyle(
+                      fontSize: 32,
+                      fontFamily: "BebasNeue",
+                      color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '\$$itemPrice',
+                  style: const TextStyle(
+                      fontSize: 24, fontFamily: "Raleway", color: Colors.white),
+                ),
+                const SizedBox(height: 8),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(
+                    "Description",
+                    style: TextStyle(
+                        fontFamily: 'Raleway',
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.primary),
+                  ),
+                  const Text(
+                    "loremadasdad adasdads ads adasda dasd sadasd adasd adad",
+                    style: TextStyle(
+                        fontFamily: 'Raleway',
+                        fontSize: 18,
+                        color: Colors.white),
+                  )
+                ]),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      color: Theme.of(context).colorScheme.primary,
+                      child: IconButton(
+                        icon: const Icon(Icons.remove, color: Colors.white),
+                        onPressed: () {
+                          // Add your plus button action here
+                          print('Minus Button Pressed');
+                        },
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 12,
+                    ),
+                    Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 16),
+                        color: Colors.white,
+                        child: Text(
+                          "3",
+                          style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context).colorScheme.primary),
+                        )),
+                    const SizedBox(
+                      width: 12,
+                    ),
+                    Container(
+                      color: Theme.of(context).colorScheme.primary,
+                      child: IconButton(
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        onPressed: () {
+                          // Add your plus button action here
+                          print('Plus Button Pressed');
+                        },
+                      ),
+                    )
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Add your button action here
+                    print('Elevated Button Pressed');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primary, // Text color
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(6), // Set the border radius
+                    ),
+                  ),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(8),
+                    child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Add To Cart',
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        ]),
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 16),
-            Text(
-              itemName,
-              style: TextStyle(
-                fontSize: 20,
-                fontFamily: "Raleway",
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8),
-            Text(
-              '\$$itemPrice',
-              style: TextStyle(
-                fontSize: 18,
-                fontFamily: "Raleway",
-              ),
-            ),
-            // Add more details as needed
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
