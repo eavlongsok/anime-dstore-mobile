@@ -11,11 +11,12 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         // Validation
+        
         $request->validate([
             'user_id' => 'required|integer',
             'new_password' => 'required|string|min:8',
         ]);
-
+        return response()->json(['success' => true]);
         // Check if user exists
         $user = DB::table('user')->where('id', $request->user_id)->first();
 
@@ -26,7 +27,7 @@ class UserController extends Controller
         // Change the password
         DB::table('user')
             ->where('id', $request->user_id)
-            ->update(['pasword' => Hash::make($request->new_password)]);
+            ->update(['password' => Hash::make($request->new_password)]);
 
         // Return a JSON response with the success status
         return response()->json(['success' => true]);
