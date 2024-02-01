@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CheckOutController;
+use App\Http\Controllers\RegisterController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -22,3 +25,6 @@ Route::post('/changePassword', [UserController::class, 'changePassword']);
 Route::post('/clearHistory', [UserController::class, 'clearHistory']);
 Route::post('/getHistory', [UserController::class, 'getHistory']);
 
+Route::post('/register', [RegisterController::class, 'storeInformation']);
+Route::get('/search/{keyword}', [SearchController::class, 'search']);
+Route::post('/checkout', [CheckOutController::class, 'checkOut']);
