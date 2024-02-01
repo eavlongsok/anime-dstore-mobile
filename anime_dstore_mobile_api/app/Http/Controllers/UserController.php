@@ -17,16 +17,16 @@ class UserController extends Controller
         ]);
 
         // Check if user exists
-        $user = DB::table('users')->where('id', $request->user_id)->first();
+        $user = DB::table('user')->where('id', $request->user_id)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
         // Change the password
-        DB::table('users')
+        DB::table('user')
             ->where('id', $request->user_id)
-            ->update(['password' => Hash::make($request->new_password)]);
+            ->update(['pasword' => Hash::make($request->new_password)]);
 
         // Return a JSON response with the success status
         return response()->json(['success' => true]);
@@ -40,14 +40,14 @@ class UserController extends Controller
         ]);
 
         // Check if user exists
-        $user = DB::table('users')->where('id', $request->user_id)->first();
+        $user = DB::table('user')->where('id', $request->user_id)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
         // Clear the history
-        DB::table('histories')->where('user_id', $request->user_id)->delete();
+        DB::table('history')->where('user_id', $request->user_id)->delete();
 
         // Return a JSON response with the success status
         return response()->json(['success' => true]);
@@ -61,16 +61,17 @@ class UserController extends Controller
         ]);
 
         // Check if user exists
-        $user = DB::table('users')->where('id', $request->user_id)->first();
+        $user = DB::table('user')->where('id', $request->user_id)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
 
         // Get the history
-        $history = DB::table('histories')
-            ->where('user_id', $request->user_id)
-            ->select('id', 'name', 'category', 'image', 'price', 'quantity')
+        $history = DB::table('history')
+            ->join('item', 'history.item_id', '=', 'item.id')
+            ->where('history.user_id', $request->user_id)
+            ->select('history.id', 'item.name', 'item.category', 'item.image', 'item.price', 'history.quantity')
             ->get();
 
         // Return the history as a JSON response
