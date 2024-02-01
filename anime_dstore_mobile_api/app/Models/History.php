@@ -10,7 +10,7 @@ class History extends Model
     protected $fillable = [
         'quantity'
     ];
-
+    public $timestamps = false;
     public $table = 'history'; 
     use HasFactory;
 

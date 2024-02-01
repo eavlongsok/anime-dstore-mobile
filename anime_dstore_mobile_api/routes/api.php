@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\CheckOutController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\RegisterController;
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ Route::post('/changePassword', [UserController::class, 'changePassword']);
 Route::post('/clearHistory', [UserController::class, 'clearHistory']);
 Route::post('/getHistory', [UserController::class, 'getHistory']);
 
-Route::post('/register', [RegisterController::class, 'storeInformation']);
+Route::any('/register', [RegisterController::class, 'storeInformation']);
+Route::any('/login', [LoginController::class, 'login']);
 Route::get('/search/{keyword}', [SearchController::class, 'search']);
-Route::post('/checkout', [CheckOutController::class, 'checkOut']);
+Route::any('/checkout', [CheckOutController::class, 'checkOut']);

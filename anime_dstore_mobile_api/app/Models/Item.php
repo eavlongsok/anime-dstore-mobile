@@ -14,8 +14,8 @@ class Item extends Model
         'price',
         'image'
     ];
-
-    public $table = 'item';
+    public $timestamps = false;
+    public $table  = 'item';
     use HasFactory;
 
 }
