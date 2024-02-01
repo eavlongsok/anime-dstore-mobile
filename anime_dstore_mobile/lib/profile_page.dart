@@ -142,7 +142,7 @@ class ProfilePage extends StatelessWidget {
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      _showChangePasswordDialog(
+                      _showConfirmClearHistory(
                           context); //Change to show confirm clear history
                     },
                     style: ElevatedButton.styleFrom(
@@ -169,6 +169,61 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
+  void _showConfirmClearHistory(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        // alert dialog is considered as input dialog
+        return AlertDialog(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          surfaceTintColor: Colors.transparent,
+          title: const Text(
+            "Clear History",
+            style: TextStyle(
+              fontFamily: 'Raleway',
+              fontSize: 24,
+              color: Colors.white,
+            ),
+          ),
+          content: const Text(
+            "Are you sure you want to clear your history?",
+            style: TextStyle(
+              fontFamily: 'Raleway',
+              fontSize: 18,
+              color: Colors.white,
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                // Validate and handle password change logic here
+                //String newPassword = newPasswordController.text;
+
+                // Implement your logic here
+
+                Navigator.pop(context); // Close the dialog
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              child: const Text(
+                'Confirm',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontFamily: "Raleway",
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Function to show the change password dialog
   void _showChangePasswordDialog(BuildContext context) {
     TextEditingController newPasswordController = TextEditingController();
@@ -176,6 +231,7 @@ class ProfilePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        // alert dialog is considered as input dialog
         return AlertDialog(
           backgroundColor: Theme.of(context).colorScheme.background,
           surfaceTintColor: Colors.transparent,

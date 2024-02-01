@@ -22,14 +22,12 @@ class CheckoutController extends Controller
             $user_id = $request->input('user_id');
             $cart = $request->input('cart');
             foreach ($cart as $item) {
-                dd($item);
                 History::create([
                     'user_id' => $user_id,
                     'item_id' => $item['item_id'],
                     'quantity' => $item['quantity'],
                 ]);
             }
-            
 
             $response = [
                 'user_id' => $user_id,

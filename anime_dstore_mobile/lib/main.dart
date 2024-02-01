@@ -210,6 +210,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           onPressed: () {
                             // Add your button action here
                             print('Elevated Button Pressed');
+
+                            _checkOutDialog(
+                                context); // show check out success dialog
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context)
@@ -308,6 +311,72 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _checkOutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          backgroundColor: Theme.of(context).colorScheme.background,
+          surfaceTintColor: Colors.transparent,
+          title: const Text(
+            'Check Out Success',
+            style: TextStyle(
+                color: Colors.white, fontFamily: "Raleway", fontSize: 24),
+          ),
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const Text(
+                    'Your order has been placed successfully.',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Raleway",
+                        fontSize: 18),
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Add your button action here
+                      print('Elevated Button Pressed');
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primary, // Text color
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(6), // Set the border radius
+                      ),
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(8),
+                      child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'OK',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontFamily: "Raleway"),
+                            ),
+                          ]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
