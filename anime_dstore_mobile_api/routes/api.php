@@ -28,5 +28,5 @@ Route::post('/getHistory', [UserController::class, 'getHistory']);
 
 Route::any('/register', [RegisterController::class, 'storeInformation']);
 Route::any('/login', [LoginController::class, 'login']);
-Route::get('/search/{keyword}', [SearchController::class, 'search']);
+Route::get('/items', [SearchController::class, 'search']);
 Route::post('/checkout', [CheckOutController::class, 'checkOut']);
