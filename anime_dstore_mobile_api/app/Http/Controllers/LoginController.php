@@ -19,7 +19,9 @@ class LoginController extends Controller
         if ($user && $user->password === $data['password']) {
             return response()->json([
                 'success' => true,
-                'user' => $user,
+                'data' => [
+                    'user' => $user,
+                ],
                 'message' => 'Login successful.',
             ], 200);
         }

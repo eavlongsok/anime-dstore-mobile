@@ -1,8 +1,11 @@
 // ignore_for_file: avoid_print, library_private_types_in_public_api
 
 import 'package:anime_dstore_mobile/item_detail.dart';
+import 'package:anime_dstore_mobile/login.dart';
 import 'package:anime_dstore_mobile/models/Items.dart';
+import 'package:anime_dstore_mobile/models/user.dart';
 import 'package:anime_dstore_mobile/profile_page.dart';
+import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -10,9 +13,18 @@ class AppProvider extends ChangeNotifier {
   String query = "";
   late Future<List<Items>> items = getItems(query);
 
+  bool isLoggedIn = false;
+  late Future<User> user;
+
   void setQuery(String value) async {
     query = value;
     items = getItems(query);
+    notifyListeners();
+  }
+
+  setUser(User value) {
+    user = Future.value(value);
+    isLoggedIn = true;
     notifyListeners();
   }
 }
@@ -232,7 +244,10 @@ class _MyHomePageState extends State<MyHomePage> {
                                 // Add your button action here
                                 print('Elevated Button Pressed');
                                 print("Query: ${appProvider.query}");
-                                appProvider.items.then((value) => print(value));
+                                appProvider.items.then((value) => {
+                                      for (var item in value)
+                                        {print("Item: ${item.name}")}
+                                    });
                                 // _checkOutDialog(
                                 // context); // show check out success dialog
                               },
@@ -252,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        'Check Out',
+                                        'Checkout',
                                         style: TextStyle(
                                             color: Colors.white,
                                             fontSize: 20,
@@ -292,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: MyGrid(),
+                    child: MyItems(),
                   )
                 ],
               ),
@@ -306,6 +321,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Navigate to the home page
                 // Example: Navigator.pushNamed(context, '/home');
               } else if (index == 1) {
+                if (appProvider.isLoggedIn == false) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                  return;
+                }
+
                 // Navigate to the profile page
                 Navigator.push(
                   context,
@@ -673,7 +696,8 @@ class MySearchBar extends StatelessWidget {
             contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           ),
           onChanged: (String value) {
-            appProvider.setQuery(value);
+            EasyDebounce.debounce('debouncer1', Duration(milliseconds: 200),
+                () => appProvider.setQuery(value));
           },
         ),
       );
@@ -784,98 +808,108 @@ class _CategoriesState extends State<Categories> {
   }
 }
 
-class MyGrid extends StatelessWidget {
-  const MyGrid({super.key});
+class MyItems extends StatelessWidget {
+  const MyItems({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-        physics: const ScrollPhysics(),
-        shrinkWrap: true,
-        crossAxisCount: 2, // Number of columns in the grid
-        crossAxisSpacing: 8.0, // Spacing between columns
-        mainAxisSpacing: 8.0, // Spacing between rows
-        childAspectRatio: 1 / 1.5,
-        children: const [
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-          MyItem(),
-        ]);
-    // gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-    //     crossAxisCount: 2, // Number of columns in the grid
-    //     crossAxisSpacing: 8.0, // Spacing between columns
-    //     mainAxisSpacing: 8.0, // Spacing between rows
-    //     childAspectRatio: 1 / 1.5),
-    // itemCount: 10, // Number of items in the grid
-    // // You can replace this container with your own widget
-    // itemBuilder: (BuildContext context, int index) {
-    //   // You can replace this container with your own widget
-    //   return InkWell(
-    //     onTap: () {
-    //       // Navigate to the ItemDetailPage and pass necessary parameters
-    //       Navigator.push(
-    //         context,
-    //         MaterialPageRoute(
-    //           builder: (context) => const ItemDetailPage(
-    //             itemName:
-    //                 "Cosplay Costume New Quality", // Replace with actual dataMyItem
-    //             itemImage: 'assets/cosplay.png', // Replace with actual data
-    //             itemPrice: 45.77, // Replace with actual data
-    //           ),
-    //         ),
-    //       );
-    //     },
-    //     child: const MyItem(),
-    //   );
-    // });
+    return Consumer<AppProvider>(builder: (context, appProvider, child) {
+      return FutureBuilder<List<Items>>(
+        future: appProvider.items,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return const Center(
+              child: Text('An error occurred',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: "Raleway",
+                      fontSize: 18)),
+            );
+          } else if (snapshot.hasData) {
+            if (snapshot.data!.isEmpty) {
+              return const Center(
+                child: Text('No data found',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Raleway",
+                        fontSize: 18)),
+              );
+            }
+
+            return GridView.count(
+                physics: const ScrollPhysics(),
+                shrinkWrap: true,
+                crossAxisCount: 2, // Number of columns in the grid
+                crossAxisSpacing: 8.0, // Spacing between columns
+                mainAxisSpacing: 8.0, // Spacing between rows
+                childAspectRatio: 1 / 1.5,
+                children:
+                    snapshot.data!.map((item) => MyItem(item: item)).toList());
+          } else {
+            return const Center(
+              child: Text('No data found'),
+            );
+          }
+        },
+      );
+    });
   }
 }
 
 class MyItem extends StatelessWidget {
-  const MyItem({super.key});
+  final Items item;
+  const MyItem({super.key, required this.item});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-        padding: const EdgeInsets.all(4),
-        child: Container(
-          color: Colors.white,
-          width: double.infinity,
-          child: Column(children: [
-            AspectRatio(
-              aspectRatio: 1 / 1.1, // Set your desired aspect ratio here
-              child: Image.asset(
-                width: 100,
-                'assets/cosplay.png',
-                fit: BoxFit.cover, // Adjust the fit property as needed
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ItemDetailPage(
+                    item: item,
+                  )),
+        );
+      },
+      child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Container(
+            color: Colors.white,
+            width: double.infinity,
+            child: Column(children: [
+              AspectRatio(
+                aspectRatio: 1 / 1.1, // Set your desired aspect ratio here
+                child: Image.network(
+                  width: 100,
+                  item.image,
+                  fit: BoxFit.cover, // Adjust the fit property as needed
+                ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(4),
-              child: Column(children: [
-                Text(
-                  "Cosplay Costume New Quality",
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontFamily: "Raleway",
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center, // Set text alignment to center
-                ),
-                Text(
-                  "\$45.77",
-                  style: TextStyle(fontSize: 14, fontFamily: "Raleway"),
-                  textAlign: TextAlign.center, // Set text alignment to center
-                ),
-              ]),
-            )
-          ]),
-        ));
+              Padding(
+                padding: const EdgeInsets.all(4),
+                child: Column(children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontFamily: "Raleway",
+                        fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center, // Set text alignment to center
+                  ),
+                  Text(
+                    "\$${item.price}",
+                    style: const TextStyle(fontSize: 14, fontFamily: "Raleway"),
+                    textAlign: TextAlign.center, // Set text alignment to center
+                  ),
+                ]),
+              )
+            ]),
+          )),
+    );
   }
 }

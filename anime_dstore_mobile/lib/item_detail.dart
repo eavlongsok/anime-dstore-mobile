@@ -1,17 +1,14 @@
 // ignore_for_file: avoid_print
 
+import 'package:anime_dstore_mobile/models/Items.dart';
 import 'package:flutter/material.dart';
 
 class ItemDetailPage extends StatelessWidget {
-  final String itemName;
-  final String itemImage;
-  final double itemPrice;
+  final Items item;
 
   const ItemDetailPage({
     super.key,
-    required this.itemName,
-    required this.itemImage,
-    required this.itemPrice,
+    required this.item,
   });
 
   @override
@@ -35,15 +32,15 @@ class ItemDetailPage extends StatelessWidget {
               children: [
                 AspectRatio(
                   aspectRatio: 1 / 1,
-                  child: Image.asset(
-                    itemImage,
+                  child: Image.network(
+                    item.image,
                     width: double.infinity,
                     fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  itemName,
+                  item.name,
                   style: const TextStyle(
                       fontSize: 32,
                       fontFamily: "BebasNeue",
@@ -52,7 +49,7 @@ class ItemDetailPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '\$$itemPrice',
+                  '\$${item.price}',
                   style: const TextStyle(
                       fontSize: 24, fontFamily: "Raleway", color: Colors.white),
                 ),
@@ -65,9 +62,9 @@ class ItemDetailPage extends StatelessWidget {
                         fontSize: 18,
                         color: Theme.of(context).colorScheme.primary),
                   ),
-                  const Text(
-                    "loremadasdad adasdads ads adasda dasd sadasd adasd adad",
-                    style: TextStyle(
+                  Text(
+                    item.description,
+                    style: const TextStyle(
                         fontFamily: 'Raleway',
                         fontSize: 18,
                         color: Colors.white),
