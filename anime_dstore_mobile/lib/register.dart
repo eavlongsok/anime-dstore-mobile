@@ -17,6 +17,10 @@ class _RegisterPageState extends State<RegisterPage> {
       body: Container(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           const SizedBox(
             height: 84,
           ),

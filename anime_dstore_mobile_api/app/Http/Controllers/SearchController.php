@@ -8,14 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class SearchController extends Controller
 {
-    public function search(Request $request){
-        try{
-            // $item = DB::table('item')->get();
-            // $results = Item::where('name', 'ilike', '%' . $keyword . '%')->select('id', 'name', 'category', 'image', 'price', 'description')->get();
-
+    public function search(Request $request)
+    {
+        try {
             // get query string from url
             $q = $request->input('q');
-            $result = Item::where('name', 'ilike', '%' . $q . '%')->select('id', 'name', 'category', 'image', 'price', 'description')->get();
+            $categories = $request->input('categories');
+
+            $result = Item::where('name', 'ilike', '%' . $q . '%')
+                // if categories is not empty, filter by categories
+                ->when($categories, function ($query, $categories) {
+                    return $query->whereIn('category', $categories);
+                })
+                ->select('id', 'name', 'category', 'image', 'price', 'description')->get();
 
             return response()->json([
                 "success" => true,
@@ -24,15 +29,14 @@ class SearchController extends Controller
                     "items" => $result,
                 ]
             ], 200);
-    }
-    catch (\Exception $e) {
-        $response = [
-            'success' => false,
-            'error' => $e->getMessage(),
-            'message' => 'Search failed.'
-        ];
+        } catch (\Exception $e) {
+            $response = [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'message' => 'Search failed.'
+            ];
 
-        return response()->json($response, 400);
-    }
+            return response()->json($response, 400);
+        }
     }
 }

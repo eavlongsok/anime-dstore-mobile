@@ -3,29 +3,104 @@
 import 'package:anime_dstore_mobile/item_detail.dart';
 import 'package:anime_dstore_mobile/login.dart';
 import 'package:anime_dstore_mobile/models/Items.dart';
+import 'package:anime_dstore_mobile/models/cart.dart';
 import 'package:anime_dstore_mobile/models/user.dart';
 import 'package:anime_dstore_mobile/profile_page.dart';
+import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class AppProvider extends ChangeNotifier {
   String query = "";
-  late Future<List<Items>> items = getItems(query);
+  List<dynamic> selectedCategories = [];
+  late Future<List<Items>> items = getItems(query, selectedCategories);
 
-  bool isLoggedIn = false;
-  late Future<User> user;
+  User user = const User(email: "", id: -1);
+
+  Set<Cart> carts = {};
 
   void setQuery(String value) async {
     query = value;
-    items = getItems(query);
+    items = getItems(query, selectedCategories);
     notifyListeners();
   }
 
-  setUser(User value) {
-    user = Future.value(value);
-    isLoggedIn = true;
+  void setUser(User value) {
+    user = value;
     notifyListeners();
+  }
+
+  bool isLoggedIn() {
+    return user.email.isNotEmpty;
+  }
+
+  void setCategory(int value) {
+    if (selectedCategories.contains(value)) {
+      selectedCategories.remove(value);
+    } else {
+      selectedCategories.add(value);
+    }
+
+    items = getItems(query, selectedCategories);
+    notifyListeners();
+  }
+
+  bool isItemInCart(int id) {
+    for (final cart in carts) {
+      if (cart.item.id == id) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  Cart getCartItem(int id) {
+    for (final cart in carts) {
+      if (cart.item.id == id) {
+        return cart;
+      }
+    }
+
+    return Cart(
+        item: const Items(
+            id: -1,
+            name: "",
+            price: "",
+            image: "",
+            category: -1,
+            description: ""),
+        quantity: 0);
+  }
+
+  void updateCart(Cart item, UpdateCartType type) {
+    switch (type) {
+      case UpdateCartType.updateQuantity:
+        for (final cart in carts) {
+          if (cart.item.id == item.item.id) {
+            cart.quantity = item.quantity;
+          }
+        }
+        break;
+      case UpdateCartType.removeItem:
+        carts.remove(item);
+        break;
+      case UpdateCartType.addItem:
+        carts.add(item);
+        break;
+    }
+
+    notifyListeners();
+  }
+
+  double calculateTotal() {
+    double cartTotal = 0;
+    for (final cart in carts) {
+      cartTotal += double.parse(cart.item.price) * cart.quantity;
+    }
+
+    return cartTotal;
   }
 }
 
@@ -88,6 +163,17 @@ class _MyHomePageState extends State<MyHomePage> {
               Builder(
                 builder: (context) => IconButton(
                   onPressed: () {
+                    // This is for the purple carts icon in the app bar
+                    // Checking carts requires user to be logged in
+                    if (appProvider.isLoggedIn() == false) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginPage()),
+                      );
+                      return;
+                    }
+
                     // Open the drawer when the IconButton is pressed
                     Scaffold.of(context).openEndDrawer();
                   },
@@ -107,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Theme.of(context).colorScheme.background,
                 child: ListView(
                   padding: EdgeInsets.zero,
-                  children: <Widget>[
+                  children: [
                     Container(
                         color: Theme.of(context).colorScheme.primary,
                         padding: const EdgeInsets.all(16),
@@ -137,147 +223,195 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ],
                         )),
-                    Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Column(
+                    Builder(builder: (context) {
+                      if (appProvider.carts.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: Column(
                               children: [
-                                CartItem(
-                                  itemName: "Cosplay Costume New Quality",
-                                  category: "Cosplay",
-                                  price: 48.56,
-                                  quantity: 3,
+                                const Text('No items in cart',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: "Raleway",
+                                        fontSize: 18)),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Theme.of(context)
+                                        .colorScheme
+                                        .primary, // Text color
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          6), // Set the border radius
+                                    ),
+                                  ),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(8),
+                                    child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'Browse Items',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20,
+                                                fontFamily: "Raleway"),
+                                          ),
+                                        ]),
+                                  ),
                                 ),
-                                CartItem(
-                                  itemName: "Cosplay Costume New Quality",
-                                  category: "Cosplay",
-                                  price: 48.56,
-                                  quantity: 3,
-                                )
                               ],
                             ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "Total: ",
-                                  style: TextStyle(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                      fontFamily: "Raleway",
-                                      fontSize: 20),
-                                ),
-                                const Text(
-                                  "\$45.23",
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: "Raleway",
-                                      fontSize: 20),
-                                )
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            const Text(
-                              "Address:",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Raleway",
-                                  fontSize: 20),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.0),
-                                color: Colors.grey[200],
-                              ),
-                              child: const TextField(
-                                decoration: InputDecoration(
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: 30,
-                                    minHeight: 20,
+                          ),
+                        );
+                      }
+
+                      return Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                  children: appProvider.carts
+                                      .map((item) => CartItem(cartItem: item))
+                                      .toList()),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "Total: ",
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        fontFamily: "Raleway",
+                                        fontSize: 20),
                                   ),
-                                  isDense: true,
-                                  hintText: 'Address',
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 8),
+                                  Text(
+                                    "\$${appProvider.calculateTotal().toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: "Raleway",
+                                        fontSize: 20),
+                                  )
+                                ],
+                              ),
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              const Text(
+                                "Address:",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: "Raleway",
+                                    fontSize: 20),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  color: Colors.grey[200],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            const Text(
-                              "Phone:",
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: "Raleway",
-                                  fontSize: 20),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8.0),
-                                color: Colors.grey[200],
-                              ),
-                              child: const TextField(
-                                decoration: InputDecoration(
-                                  prefixIconConstraints: BoxConstraints(
-                                    minWidth: 30,
-                                    minHeight: 20,
+                                child: const TextField(
+                                  decoration: InputDecoration(
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: 30,
+                                      minHeight: 20,
+                                    ),
+                                    isDense: true,
+                                    hintText: 'Address',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 8),
                                   ),
-                                  isDense: true,
-                                  hintText: '+855 24 4535 333',
-                                  border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 8),
                                 ),
                               ),
-                            ),
-                            const SizedBox(
-                              height: 24,
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                // Add your button action here
-                                print('Elevated Button Pressed');
-                                print("Query: ${appProvider.query}");
-                                appProvider.items.then((value) => {
-                                      for (var item in value)
-                                        {print("Item: ${item.name}")}
-                                    });
-                                // _checkOutDialog(
-                                // context); // show check out success dialog
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(context)
-                                    .colorScheme
-                                    .primary, // Text color
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      6), // Set the border radius
+                              const SizedBox(
+                                height: 8,
+                              ),
+                              const Text(
+                                "Phone:",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: "Raleway",
+                                    fontSize: 20),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  color: Colors.grey[200],
+                                ),
+                                child: const TextField(
+                                  decoration: InputDecoration(
+                                    prefixIconConstraints: BoxConstraints(
+                                      minWidth: 30,
+                                      minHeight: 20,
+                                    ),
+                                    isDense: true,
+                                    hintText: '+855 24 4535 333',
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 8, horizontal: 8),
+                                  ),
                                 ),
                               ),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(8),
-                                child: const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Checkout',
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20,
-                                            fontFamily: "Raleway"),
-                                      ),
-                                    ]),
+                              const SizedBox(
+                                height: 24,
                               ),
-                            ),
-                          ],
-                        ))
+                              ElevatedButton(
+                                onPressed: () async {
+                                  if (appProvider.isLoggedIn() == false) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginPage()),
+                                    );
+                                    return;
+                                  }
+
+                                  final bool checkOutSuccess = await checkout(
+                                      appProvider.carts, appProvider.user.id);
+
+                                  if (checkOutSuccess) {
+                                    appProvider.carts.clear();
+                                    _checkOutDialog(
+                                        context); // show check out success dialog
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Theme.of(context)
+                                      .colorScheme
+                                      .primary, // Text color
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        6), // Set the border radius
+                                  ),
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(8),
+                                  child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Checkout',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 20,
+                                              fontFamily: "Raleway"),
+                                        ),
+                                      ]),
+                                ),
+                              ),
+                            ],
+                          ));
+                    })
                   ],
                 ),
               )),
@@ -321,7 +455,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 // Navigate to the home page
                 // Example: Navigator.pushNamed(context, '/home');
               } else if (index == 1) {
-                if (appProvider.isLoggedIn == false) {
+                if (appProvider.isLoggedIn() == false) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -391,9 +525,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      // Add your button action here
-                      print('Elevated Button Pressed');
-                      Navigator.pop(context);
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const MyHomePage()),
+                        (Route<dynamic> route) => false,
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
@@ -430,241 +567,257 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class CartItem extends StatelessWidget {
-  final String itemName;
-  final String category;
-  final double price;
-  final int quantity;
+  final Cart cartItem;
 
   const CartItem({
     super.key,
-    required this.itemName,
-    required this.category,
-    required this.price,
-    required this.quantity,
+    required this.cartItem,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Show the bottom sheet for editing the quantity
-        showModalBottomSheet(
-          context: context,
-          builder: (BuildContext context) {
-            return Container(
-                color: Theme.of(context).colorScheme.background,
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+    return Consumer<AppProvider>(builder: (context, appProvider, child) {
+      return GestureDetector(
+        onTap: () {
+          // Show the bottom sheet for editing the quantity
+          showModalBottomSheet(
+            context: context,
+            builder: (BuildContext context) {
+              // use stateful builder to update the quantity modal state otherwise the quantity will not update the ui
+              return StatefulBuilder(builder: (context, setModalState) {
+                return Container(
+                    color: Theme.of(context).colorScheme.background,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
                       children: [
-                        Container(
-                          color: Theme.of(context).colorScheme.primary,
-                          child: IconButton(
-                            icon: const Icon(Icons.remove, color: Colors.white),
-                            onPressed: () {
-                              // Add your plus button action here
-                              print('Minus Button Pressed');
-                            },
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              color: Theme.of(context).colorScheme.primary,
+                              child: IconButton(
+                                icon: const Icon(Icons.remove,
+                                    color: Colors.white),
+                                onPressed: () {
+                                  if (cartItem.quantity > 1) {
+                                    setModalState(() {
+                                      cartItem.quantity -= 1;
+                                    });
+                                  }
+
+                                  appProvider.updateCart(
+                                      cartItem, UpdateCartType.updateQuantity);
+                                },
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 16),
+                                color: Colors.white,
+                                child: Text(
+                                  cartItem.quantity.toString(),
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                )),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            Container(
+                              color: Theme.of(context).colorScheme.primary,
+                              child: IconButton(
+                                icon:
+                                    const Icon(Icons.add, color: Colors.white),
+                                onPressed: () {
+                                  setModalState(() {
+                                    cartItem.quantity += 1;
+                                  });
+
+                                  // Update the cart
+                                  appProvider.updateCart(
+                                      cartItem, UpdateCartType.updateQuantity);
+                                },
+                              ),
+                            )
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 16,
+                        ),
+                        OutlinedButton(
+                          onPressed: () {
+                            appProvider.updateCart(
+                                cartItem, UpdateCartType.removeItem);
+                            Navigator.pop(context);
+                          },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary, // Change this color to the desired border color
+                              width: 2.0, // You can adjust the border width
+                            ),
+                            // Text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  6), // Set the border radius
+                            ),
+                          ),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Remove',
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary,
+                                        fontFamily: "Raleway",
+                                        fontSize: 20),
+                                  ),
+                                ]),
                           ),
                         ),
                         const SizedBox(
-                          width: 12,
+                          height: 16,
                         ),
-                        Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 10, horizontal: 16),
-                            color: Colors.white,
-                            child: Text(
-                              "3",
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  color: Theme.of(context).colorScheme.primary),
-                            )),
-                        const SizedBox(
-                          width: 12,
-                        ),
-                        Container(
-                          color: Theme.of(context).colorScheme.primary,
-                          child: IconButton(
-                            icon: const Icon(Icons.add, color: Colors.white),
-                            onPressed: () {
-                              // Add your plus button action here
-                              print('Plus Button Pressed');
-                            },
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primary, // Text color
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  6), // Set the border radius
+                            ),
                           ),
-                        )
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontFamily: "Raleway"),
+                                  ),
+                                ]),
+                          ),
+                        ),
                       ],
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        // Add your button action here
-                        print('Outline Button Pressed');
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary, // Change this color to the desired border color
-                          width: 2.0, // You can adjust the border width
-                        ),
-                        // Text color
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(6), // Set the border radius
-                        ),
+                    ));
+              });
+            },
+          );
+        },
+        child: Row(
+          children: [
+            Image.network(
+              cartItem.item.image,
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 250, // Adjust the width as needed
+                    child: Text(
+                      cartItem.item.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: "Raleway",
+                        fontSize: 18,
                       ),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Remove',
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    fontFamily: "Raleway",
-                                    fontSize: 20),
-                              ),
-                            ]),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Add your button action here
-                        print('Elevated Button Pressed');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            Theme.of(context).colorScheme.primary, // Text color
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(6), // Set the border radius
-                        ),
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(8),
-                        child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Confirm',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20,
-                                    fontFamily: "Raleway"),
-                              ),
-                            ]),
-                      ),
-                    ),
-                  ],
-                ));
-          },
-        );
-      },
-      child: Row(
-        children: [
-          Image.asset(
-            'assets/cosplay.png',
-            width: 100,
-            height: 100,
-            fit: BoxFit.cover,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 250, // Adjust the width as needed
-                  child: Text(
-                    itemName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: "Raleway",
-                      fontSize: 18,
                     ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Text(
-                      "Category: ",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontFamily: "Raleway",
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                  Row(
+                    children: [
+                      Text(
+                        "Category: ",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontFamily: "Raleway",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    Text(
-                      category,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Raleway",
-                        fontSize: 14,
+                      Text(
+                        categories[cartItem.item.category]!,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Raleway",
+                          fontSize: 14,
+                        ),
+                      )
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        "Price: ",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontFamily: "Raleway",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    )
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      "Price: ",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontFamily: "Raleway",
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                      Text(
+                        "\$${cartItem.item.price}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Raleway",
+                          fontSize: 14,
+                        ),
+                      )
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        "Quantity: ",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontFamily: "Raleway",
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    Text(
-                      "\$${price.toStringAsFixed(2)}",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Raleway",
-                        fontSize: 14,
-                      ),
-                    )
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      "Quantity: ",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontFamily: "Raleway",
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      quantity.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Raleway",
-                        fontSize: 14,
-                      ),
-                    )
-                  ],
-                ),
-              ],
+                      Text(
+                        cartItem.quantity.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Raleway",
+                          fontSize: 14,
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -696,7 +849,9 @@ class MySearchBar extends StatelessWidget {
             contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           ),
           onChanged: (String value) {
-            EasyDebounce.debounce('debouncer1', Duration(milliseconds: 200),
+            EasyDebounce.debounce(
+                'debouncer1',
+                const Duration(milliseconds: 200),
                 () => appProvider.setQuery(value));
           },
         ),
@@ -714,11 +869,11 @@ class Categories extends StatefulWidget {
 
 class _CategoriesState extends State<Categories> {
   bool isExpanded = false;
-  Map<String, bool> categoryToggles = {
-    "Figure": false,
-    "Cosplay": false,
-    "Apparel": false,
-    "Accessory": false,
+  Map<int, bool> categoryToggles = {
+    1: false,
+    2: false,
+    3: false,
+    4: false,
   };
 
   @override
@@ -755,13 +910,13 @@ class _CategoriesState extends State<Categories> {
           if (isExpanded)
             Row(
               children: [
-                buildCategory("Figure", 'assets/figure.png'),
+                buildCategory('assets/figure.png', 1),
                 const SizedBox(width: 8),
-                buildCategory("Cosplay", 'assets/cosplay.png'),
+                buildCategory('assets/cosplay.png', 2),
                 const SizedBox(width: 8),
-                buildCategory("Apparel", 'assets/apparel.png'),
+                buildCategory('assets/apparel.png', 3),
                 const SizedBox(width: 8),
-                buildCategory("Accessory", 'assets/accessory.png'),
+                buildCategory('assets/accessory.png', 4),
               ],
             ),
         ],
@@ -769,42 +924,50 @@ class _CategoriesState extends State<Categories> {
     );
   }
 
-  Widget buildCategory(String categoryName, String imagePath) {
-    bool isToggled = categoryToggles[categoryName]!;
-    return Column(
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              categoryToggles[categoryName] = !isToggled;
-            });
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: isToggled
-                  ? Border.all(
-                      color: Theme.of(context).colorScheme.primary, width: 2.0)
-                  : Border.all(color: Colors.transparent, width: 2.0),
-            ),
-            child: Image.asset(
-              imagePath,
-              width: 80.0,
-              height: 80.0,
+  Widget buildCategory(String imagePath, int id) {
+    bool isToggled = categoryToggles[id]!;
+    return Consumer<AppProvider>(builder: (context, appProvider, child) {
+      return Column(
+        children: [
+          InkWell(
+            onTap: () {
+              setState(() {
+                categoryToggles[id] = !isToggled;
+              });
+
+              EasyDebounce.debounce(
+                  'category',
+                  const Duration(milliseconds: 200),
+                  () => appProvider.setCategory(id));
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                border: isToggled
+                    ? Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2.0)
+                    : Border.all(color: Colors.transparent, width: 2.0),
+              ),
+              child: Image.asset(
+                imagePath,
+                width: 80.0,
+                height: 80.0,
+              ),
             ),
           ),
-        ),
-        Text(
-          categoryName,
-          style: TextStyle(
-            color: isToggled
-                ? Theme.of(context).colorScheme.primary
-                : Colors.white,
-            fontFamily: "Raleway",
-            fontSize: 16,
+          Text(
+            categories[id]!,
+            style: TextStyle(
+              color: isToggled
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.white,
+              fontFamily: "Raleway",
+              fontSize: 16,
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 }
 
@@ -851,7 +1014,11 @@ class MyItems extends StatelessWidget {
                     snapshot.data!.map((item) => MyItem(item: item)).toList());
           } else {
             return const Center(
-              child: Text('No data found'),
+              child: Text('No data found',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: "Raleway",
+                      fontSize: 18)),
             );
           }
         },

@@ -1,173 +1,182 @@
 import 'package:anime_dstore_mobile/login.dart';
+import 'package:anime_dstore_mobile/main.dart';
+import 'package:anime_dstore_mobile/models/user.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        scrolledUnderElevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.background,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+    return Consumer<AppProvider>(builder: (context, appProvider, child) {
+      return Scaffold(
+        appBar: AppBar(
+          scrolledUnderElevation: 0,
+          backgroundColor: Theme.of(context).colorScheme.background,
+          leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Account Info",
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.white,
-                  fontFamily: "Raleway",
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Account Info",
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontFamily: "Raleway",
+                  ),
                 ),
-              ),
-              Row(
-                children: [
-                  Text(
-                    "Email: ",
-                    style: TextStyle(
-                      fontFamily: "Raleway",
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  const Text(
-                    "depresso@gmail.com",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontFamily: "Raleway",
-                      color: Colors.white,
-                    ),
-                  )
-                ],
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      _showChangePasswordDialog(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text(
-                      'Change Password',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontFamily: "Raleway",
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 8,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginPage()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text(
-                      'Logout',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 18,
-                        fontFamily: "Raleway",
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(
-                height: 16,
-              ),
-              const Text(
-                'History',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontFamily: "Raleway",
-                ),
-              ),
-              const Column(children: [
-                Column(
+                Row(
                   children: [
-                    HistoryItem(
-                      itemName: "Cosplay Costume New Quality adadad",
-                      category: "Cosplay",
-                      price: 48.56,
-                      quantity: 3,
+                    Text(
+                      "Email: ",
+                      style: TextStyle(
+                        fontFamily: "Raleway",
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
-                    HistoryItem(
-                      itemName: "Cosplay Costume New Quality adadad",
-                      category: "Cosplay",
-                      price: 48.56,
-                      quantity: 3,
+                    const Text(
+                      "depresso@gmail.com",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontFamily: "Raleway",
+                        color: Colors.white,
+                      ),
                     )
                   ],
                 ),
-              ]),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      _showConfirmClearHistory(
-                          context); //Change to show confirm clear history
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
+                const SizedBox(
+                  height: 16,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        _showChangePasswordDialog(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: const Text(
+                        'Change Password',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontFamily: "Raleway",
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'Clear History',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 18,
-                        fontFamily: "Raleway",
+                  ],
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        appProvider.setUser(const User(email: "", id: -1));
+
+                        // clear the navigation stack keep only home page then navigate to login page
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginPage()),
+                          (route) => false,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 18,
+                          fontFamily: "Raleway",
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                const Text(
+                  'History',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontFamily: "Raleway",
                   ),
-                ],
-              )
-            ],
+                ),
+                const Column(children: [
+                  Column(
+                    children: [
+                      HistoryItem(
+                        itemName: "Cosplay Costume New Quality adadad",
+                        category: "Cosplay",
+                        price: 48.56,
+                        quantity: 3,
+                      ),
+                      HistoryItem(
+                        itemName: "Cosplay Costume New Quality adadad",
+                        category: "Cosplay",
+                        price: 48.56,
+                        quantity: 3,
+                      )
+                    ],
+                  ),
+                ]),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        _showConfirmClearHistory(
+                            context); //Change to show confirm clear history
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                      child: const Text(
+                        'Clear History',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 18,
+                          fontFamily: "Raleway",
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   void _showConfirmClearHistory(BuildContext context) {

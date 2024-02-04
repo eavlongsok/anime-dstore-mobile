@@ -20,8 +20,9 @@ class CheckoutController extends Controller
             //     'cart.*.quantity' => 'required|integer|min:1',
             // ]);
             $user_id = $request->input('user_id');
-            $cart = $request->input('cart');
-            foreach ($cart as $item) {
+            $carts = $request->input('carts');
+
+            foreach ($carts as $item) {
                 History::create([
                     'user_id' => $user_id,
                     'item_id' => $item['item_id'],
@@ -31,7 +32,7 @@ class CheckoutController extends Controller
 
             $response = [
                 'user_id' => $user_id,
-                'cart' => $cart,
+                'carts' => $carts,
                 'message' => 'Checkout successful.',
             ];
 

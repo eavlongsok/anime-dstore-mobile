@@ -42,9 +42,18 @@ List<Items> parseItems(String responseBody) {
       .toList();
 }
 
-Future<List<Items>> getItems(String query) async {
-  final response =
-      await http.get(Uri.parse('$externalApiUrl/api/items?q=$query'));
+Future<List<Items>> getItems(
+    String query, List<dynamic> selectedCategories) async {
+  String categories = selectedCategories.join('&categories[]=');
+
+  if (categories.isEmpty) {
+    categories = '';
+  } else {
+    categories = '&categories[]=${categories}';
+  }
+
+  final response = await http
+      .get(Uri.parse('$externalApiUrl/api/items?q=$query$categories'));
   if (response.statusCode == 200) {
     return parseItems(response.body);
   }

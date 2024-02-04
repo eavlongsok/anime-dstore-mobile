@@ -25,6 +25,18 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(16),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => {
+                if (Navigator.canPop(context))
+                  {Navigator.pop(context)}
+                else
+                  {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) => MyApp()))
+                  }
+              },
+            ),
             const SizedBox(
               height: 84,
             ),
@@ -100,14 +112,7 @@ class _LoginPageState extends State<LoginPage> {
               onPressed: () {
                 login(email, password).then((value) => {
                       if (value.email.isNotEmpty && value.id > 0)
-                        {
-                          appProvider.setUser(value),
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const MyHomePage()),
-                          )
-                        }
+                        {appProvider.setUser(value), Navigator.pop(context)}
                     });
               },
               style: ElevatedButton.styleFrom(
@@ -155,22 +160,6 @@ class _LoginPageState extends State<LoginPage> {
                         fontFamily: "Raleway"),
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MyHomePage()),
-                    );
-                  },
-                  child: Text(
-                    'Shop as Guest',
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontSize: 18,
-                        fontFamily: "Raleway"),
-                  ),
-                )
               ],
             )
           ]),
