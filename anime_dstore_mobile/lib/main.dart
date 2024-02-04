@@ -2,9 +2,9 @@
 
 import 'package:anime_dstore_mobile/item_detail.dart';
 import 'package:anime_dstore_mobile/login.dart';
-import 'package:anime_dstore_mobile/models/Items.dart';
-import 'package:anime_dstore_mobile/models/cart.dart';
-import 'package:anime_dstore_mobile/models/user.dart';
+import 'package:anime_dstore_mobile/models/Item.dart';
+import 'package:anime_dstore_mobile/models/Cart.dart';
+import 'package:anime_dstore_mobile/models/User.dart';
 import 'package:anime_dstore_mobile/profile_page.dart';
 import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:easy_debounce/easy_debounce.dart';
@@ -14,7 +14,7 @@ import 'package:provider/provider.dart';
 class AppProvider extends ChangeNotifier {
   String query = "";
   List<dynamic> selectedCategories = [];
-  late Future<List<Items>> items = getItems(query, selectedCategories);
+  late Future<List<Item>> items = getItem(query, selectedCategories);
 
   User user = const User(email: "", id: -1);
 
@@ -22,7 +22,7 @@ class AppProvider extends ChangeNotifier {
 
   void setQuery(String value) async {
     query = value;
-    items = getItems(query, selectedCategories);
+    items = getItem(query, selectedCategories);
     notifyListeners();
   }
 
@@ -42,7 +42,7 @@ class AppProvider extends ChangeNotifier {
       selectedCategories.add(value);
     }
 
-    items = getItems(query, selectedCategories);
+    items = getItem(query, selectedCategories);
     notifyListeners();
   }
 
@@ -64,7 +64,7 @@ class AppProvider extends ChangeNotifier {
     }
 
     return Cart(
-        item: const Items(
+        item: const Item(
             id: -1,
             name: "",
             price: "",
@@ -123,6 +123,7 @@ class MyApp extends StatelessWidget {
 
     Color mySecondaryColor = const Color.fromRGBO(20, 20, 20, 1.0);
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // Use colorScheme to define custom colors
         colorScheme: ColorScheme.light(
@@ -256,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             MainAxisAlignment.center,
                                         children: [
                                           Text(
-                                            'Browse Items',
+                                            'Browse Item',
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 20,
@@ -363,7 +364,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 height: 24,
                               ),
                               ElevatedButton(
-                                onPressed: () async {
+                                onPressed: () {
                                   if (appProvider.isLoggedIn() == false) {
                                     Navigator.push(
                                       context,
@@ -374,14 +375,15 @@ class _MyHomePageState extends State<MyHomePage> {
                                     return;
                                   }
 
-                                  final bool checkOutSuccess = await checkout(
-                                      appProvider.carts, appProvider.user.id);
-
-                                  if (checkOutSuccess) {
-                                    appProvider.carts.clear();
-                                    _checkOutDialog(
-                                        context); // show check out success dialog
-                                  }
+                                  checkout(appProvider.carts,
+                                          appProvider.user.id)
+                                      .then((checkOutSuccess) => {
+                                            if (checkOutSuccess)
+                                              {
+                                                appProvider.carts.clear(),
+                                                _checkOutDialog(context)
+                                              }
+                                          });
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Theme.of(context)
@@ -452,8 +454,9 @@ class _MyHomePageState extends State<MyHomePage> {
             onTap: (index) {
               // Handle navigation or other actions based on the selected index
               if (index == 0) {
-                // Navigate to the home page
-                // Example: Navigator.pushNamed(context, '/home');
+                // Update the current index
+                _currentIndex = index;
+                // pass
               } else if (index == 1) {
                 if (appProvider.isLoggedIn() == false) {
                   Navigator.push(
@@ -469,8 +472,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   MaterialPageRoute(builder: (context) => const ProfilePage()),
                 );
               }
-              // Update the current index
-              _currentIndex = index;
             },
             selectedItemColor: Theme.of(context).colorScheme.primary,
             unselectedItemColor: Colors.white,
@@ -525,6 +526,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          content: const Text(
+                              "Order placed successfully, Thanks for shopping with us!",
+                              style: TextStyle(color: Colors.white)),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
@@ -577,244 +589,248 @@ class CartItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(builder: (context, appProvider, child) {
-      return GestureDetector(
-        onTap: () {
-          // Show the bottom sheet for editing the quantity
-          showModalBottomSheet(
-            context: context,
-            builder: (BuildContext context) {
-              // use stateful builder to update the quantity modal state otherwise the quantity will not update the ui
-              return StatefulBuilder(builder: (context, setModalState) {
-                return Container(
-                    color: Theme.of(context).colorScheme.background,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              color: Theme.of(context).colorScheme.primary,
-                              child: IconButton(
-                                icon: const Icon(Icons.remove,
-                                    color: Colors.white),
-                                onPressed: () {
-                                  if (cartItem.quantity > 1) {
-                                    setModalState(() {
-                                      cartItem.quantity -= 1;
-                                    });
-                                  }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: GestureDetector(
+          onTap: () {
+            // Show the bottom sheet for editing the quantity
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                // use stateful builder to update the quantity modal state otherwise the quantity will not update the ui
+                return StatefulBuilder(builder: (context, setModalState) {
+                  return Container(
+                      color: Theme.of(context).colorScheme.background,
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                color: Theme.of(context).colorScheme.primary,
+                                child: IconButton(
+                                  icon: const Icon(Icons.remove,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    if (cartItem.quantity > 1) {
+                                      setModalState(() {
+                                        cartItem.quantity -= 1;
+                                      });
+                                    }
 
-                                  appProvider.updateCart(
-                                      cartItem, UpdateCartType.updateQuantity);
-                                },
+                                    appProvider.updateCart(cartItem,
+                                        UpdateCartType.updateQuantity);
+                                  },
+                                ),
                               ),
-                            ),
-                            const SizedBox(
-                              width: 12,
-                            ),
-                            Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 16),
-                                color: Colors.white,
-                                child: Text(
-                                  cartItem.quantity.toString(),
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
-                                )),
-                            const SizedBox(
-                              width: 12,
-                            ),
-                            Container(
-                              color: Theme.of(context).colorScheme.primary,
-                              child: IconButton(
-                                icon:
-                                    const Icon(Icons.add, color: Colors.white),
-                                onPressed: () {
-                                  setModalState(() {
-                                    cartItem.quantity += 1;
-                                  });
-
-                                  // Update the cart
-                                  appProvider.updateCart(
-                                      cartItem, UpdateCartType.updateQuantity);
-                                },
+                              const SizedBox(
+                                width: 12,
                               ),
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        OutlinedButton(
-                          onPressed: () {
-                            appProvider.updateCart(
-                                cartItem, UpdateCartType.removeItem);
-                            Navigator.pop(context);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary, // Change this color to the desired border color
-                              width: 2.0, // You can adjust the border width
-                            ),
-                            // Text color
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  6), // Set the border radius
-                            ),
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(8),
-                            child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Remove',
+                              Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 10, horizontal: 16),
+                                  color: Colors.white,
+                                  child: Text(
+                                    cartItem.quantity.toString(),
                                     style: TextStyle(
+                                        fontSize: 18,
                                         color: Theme.of(context)
                                             .colorScheme
-                                            .primary,
-                                        fontFamily: "Raleway",
-                                        fontSize: 20),
-                                  ),
-                                ]),
+                                            .primary),
+                                  )),
+                              const SizedBox(
+                                width: 12,
+                              ),
+                              Container(
+                                color: Theme.of(context).colorScheme.primary,
+                                child: IconButton(
+                                  icon: const Icon(Icons.add,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    setModalState(() {
+                                      cartItem.quantity += 1;
+                                    });
+
+                                    // Update the cart
+                                    appProvider.updateCart(cartItem,
+                                        UpdateCartType.updateQuantity);
+                                  },
+                                ),
+                              )
+                            ],
                           ),
-                        ),
-                        const SizedBox(
-                          height: 16,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context)
-                                .colorScheme
-                                .primary, // Text color
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  6), // Set the border radius
+                          const SizedBox(
+                            height: 16,
+                          ),
+                          OutlinedButton(
+                            onPressed: () {
+                              appProvider.updateCart(
+                                  cartItem, UpdateCartType.removeItem);
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary, // Change this color to the desired border color
+                                width: 2.0, // You can adjust the border width
+                              ),
+                              // Text color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    6), // Set the border radius
+                              ),
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(8),
+                              child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Remove',
+                                      style: TextStyle(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          fontFamily: "Raleway",
+                                          fontSize: 20),
+                                    ),
+                                  ]),
                             ),
                           ),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(8),
-                            child: const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Confirm',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontFamily: "Raleway"),
-                                  ),
-                                ]),
+                          const SizedBox(
+                            height: 16,
                           ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary, // Text color
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    6), // Set the border radius
+                              ),
+                            ),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(8),
+                              child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Confirm',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 20,
+                                          fontFamily: "Raleway"),
+                                    ),
+                                  ]),
+                            ),
+                          ),
+                        ],
+                      ));
+                });
+              },
+            );
+          },
+          child: Row(
+            children: [
+              Image.network(
+                cartItem.item.image,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 250, // Adjust the width as needed
+                      child: Text(
+                        cartItem.item.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontFamily: "Raleway",
+                          fontSize: 18,
                         ),
-                      ],
-                    ));
-              });
-            },
-          );
-        },
-        child: Row(
-          children: [
-            Image.network(
-              cartItem.item.image,
-              width: 100,
-              height: 100,
-              fit: BoxFit.cover,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: 250, // Adjust the width as needed
-                    child: Text(
-                      cartItem.item.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontFamily: "Raleway",
-                        fontSize: 18,
                       ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        "Category: ",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontFamily: "Raleway",
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                    Row(
+                      children: [
+                        Text(
+                          "Category: ",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontFamily: "Raleway",
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      Text(
-                        categories[cartItem.item.category]!,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: "Raleway",
-                          fontSize: 14,
+                        Text(
+                          categories[cartItem.item.category]!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: "Raleway",
+                            fontSize: 14,
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Price: ",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontFamily: "Raleway",
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
-                      )
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        "Price: ",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontFamily: "Raleway",
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                        Text(
+                          "\$${cartItem.item.price}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: "Raleway",
+                            fontSize: 14,
+                          ),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          "Quantity: ",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontFamily: "Raleway",
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "\$${cartItem.item.price}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: "Raleway",
-                          fontSize: 14,
-                        ),
-                      )
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Text(
-                        "Quantity: ",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontFamily: "Raleway",
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                      Text(
-                        cartItem.quantity.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontFamily: "Raleway",
-                          fontSize: 14,
-                        ),
-                      )
-                    ],
-                  ),
-                ],
+                        Text(
+                          cartItem.quantity.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: "Raleway",
+                            fontSize: 14,
+                          ),
+                        )
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     });
@@ -850,7 +866,7 @@ class MySearchBar extends StatelessWidget {
           ),
           onChanged: (String value) {
             EasyDebounce.debounce(
-                'debouncer1',
+                'searchDebounce',
                 const Duration(milliseconds: 200),
                 () => appProvider.setQuery(value));
           },
@@ -977,7 +993,7 @@ class MyItems extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppProvider>(builder: (context, appProvider, child) {
-      return FutureBuilder<List<Items>>(
+      return FutureBuilder<List<Item>>(
         future: appProvider.items,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -1028,7 +1044,7 @@ class MyItems extends StatelessWidget {
 }
 
 class MyItem extends StatelessWidget {
-  final Items item;
+  final Item item;
   const MyItem({super.key, required this.item});
 
   @override

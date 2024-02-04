@@ -1,12 +1,12 @@
 import 'dart:convert';
 
-import 'package:anime_dstore_mobile/models/Items.dart';
+import 'package:anime_dstore_mobile/models/Item.dart';
 import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:http/http.dart' as http;
 
 class Cart {
   int quantity;
-  final Items item;
+  final Item item;
 
   Cart({
     required this.quantity,

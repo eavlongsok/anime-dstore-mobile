@@ -2,7 +2,7 @@ import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class Items {
+class Item {
   final int id;
   final String name;
   final int category;
@@ -11,7 +11,7 @@ class Items {
   final String description;
 
   // Constructor
-  const Items({
+  const Item({
     required this.id,
     required this.name,
     required this.category,
@@ -20,8 +20,8 @@ class Items {
     required this.description,
   });
 
-  factory Items.fromJson(Map<String, dynamic> json) {
-    return Items(
+  factory Item.fromJson(Map<String, dynamic> json) {
+    return Item(
       id: json['id'],
       name: json['name'],
       category: json['category'],
@@ -32,17 +32,17 @@ class Items {
   }
 }
 
-List<Items> parseItems(String responseBody) {
+List<Item> parseItem(String responseBody) {
   final parsed = jsonDecode(responseBody);
 
   // example response
   // {"success":true,"message":"Search successful.","data":{"items":[{"id":1,"name":"Goku tshirt","category":1,"image":"Who","price":"20","description":"1"}]}}
   return parsed['data']['items']
-      .map<Items>((json) => Items.fromJson(json))
+      .map<Item>((json) => Item.fromJson(json))
       .toList();
 }
 
-Future<List<Items>> getItems(
+Future<List<Item>> getItem(
     String query, List<dynamic> selectedCategories) async {
   String categories = selectedCategories.join('&categories[]=');
 
@@ -55,7 +55,7 @@ Future<List<Items>> getItems(
   final response = await http
       .get(Uri.parse('$externalApiUrl/api/items?q=$query$categories'));
   if (response.statusCode == 200) {
-    return parseItems(response.body);
+    return parseItem(response.body);
   }
   throw Exception('Failed to load items');
 }

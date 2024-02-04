@@ -22,9 +22,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/changePassword', [UserController::class, 'changePassword']);
-Route::post('/clearHistory', [UserController::class, 'clearHistory']);
-Route::post('/getHistory', [UserController::class, 'getHistory']);
+Route::post('/user/changePassword', [UserController::class, 'changePassword']);
+Route::post('/user/clearPurchaseHistory', [UserController::class, 'clearHistory']);
+Route::get('/user/purchaseHistory', [UserController::class, 'getHistory']);
 
 Route::any('/register', [RegisterController::class, 'storeInformation']);
 Route::any('/login', [LoginController::class, 'login']);

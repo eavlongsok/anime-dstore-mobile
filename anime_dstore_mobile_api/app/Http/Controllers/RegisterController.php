@@ -16,6 +16,14 @@ class RegisterController extends Controller
         ]);
 
         try {
+            if (User::where('email', $data['email'])->exists()) {
+                $response = [
+                    'success' => false,
+                    'message' => 'User already exists.'
+                ];
+                return response()->json($response, 400);
+            }
+
             $user = User::create([
                 'email' => $data['email'],
                 'password' => $data['password']
@@ -25,8 +33,8 @@ class RegisterController extends Controller
                 'success' => true,
                 'message' => 'User created successfully.'
             ];
-            
-            return response()->json($response, 200); 
+
+            return response()->json($response, 200);
         } catch (\Exception $e) {
             $response = [
                 'success' => false,
@@ -34,7 +42,7 @@ class RegisterController extends Controller
                 'message' => 'User creation failed.'
             ];
 
-            return response()->json($response, 400); 
+            return response()->json($response, 400);
         }
     }
 }

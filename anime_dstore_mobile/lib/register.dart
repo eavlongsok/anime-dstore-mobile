@@ -2,6 +2,7 @@
 
 import 'package:anime_dstore_mobile/login.dart';
 import 'package:anime_dstore_mobile/main.dart';
+import 'package:anime_dstore_mobile/models/User.dart';
 import 'package:flutter/material.dart';
 
 // ignore: use_key_in_widget_constructors
@@ -11,6 +12,54 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String emailErrorMessage = "";
+  String passwordErrorMessage = "";
+
+  // dispose is used to clean up resources
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool validateEmail(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        emailErrorMessage = "Email is required";
+      });
+      return false;
+    }
+
+    if (!value.contains("@")) {
+      setState(() {
+        emailErrorMessage = "Email is invalid";
+      });
+      return false;
+    }
+
+    setState(() {
+      emailErrorMessage = "";
+    });
+    return true;
+  }
+
+  bool validatePassword(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        passwordErrorMessage = "Password is required";
+      });
+      return false;
+    }
+
+    setState(() {
+      passwordErrorMessage = "";
+    });
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,7 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(
@@ -46,17 +95,21 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(8.0),
               color: Colors.grey[200],
             ),
-            child: const TextField(
+            child: TextField(
+              controller: _emailController,
               decoration: InputDecoration(
-                prefixIconConstraints: BoxConstraints(
+                prefixIconConstraints: const BoxConstraints(
                   minWidth: 30,
                   minHeight: 20,
                 ),
+                errorText: emailErrorMessage,
+                // make error outside of the input
+                errorStyle: const TextStyle(height: 0),
                 isDense: true,
                 hintText: 'Email',
                 border: InputBorder.none,
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               ),
             ),
           ),
@@ -73,17 +126,21 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(8.0),
               color: Colors.grey[200],
             ),
-            child: const TextField(
+            child: TextField(
+              controller: _passwordController,
               decoration: InputDecoration(
-                prefixIconConstraints: BoxConstraints(
+                prefixIconConstraints: const BoxConstraints(
                   minWidth: 30,
                   minHeight: 20,
                 ),
+                errorText: passwordErrorMessage,
+                // make error outside of the input
+                errorStyle: const TextStyle(height: 0),
                 isDense: true,
                 hintText: 'Password',
                 border: InputBorder.none,
                 contentPadding:
-                    EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               ),
             ),
           ),
@@ -92,12 +149,44 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Add your button action here
-              print('Elevated Button Pressed');
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MyHomePage()),
-              );
+              final String email = _emailController.text;
+              final String password = _passwordController.text;
+
+              validateEmail(email);
+              validatePassword(password);
+
+              if (emailErrorMessage.isNotEmpty ||
+                  passwordErrorMessage.isNotEmpty) {
+                return;
+              }
+
+              register(email, password).then((success) => {
+                    if (success)
+                      {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            backgroundColor:
+                                Theme.of(context).colorScheme.primary,
+                            content: const Text("User registered successfully!",
+                                style: TextStyle(color: Colors.white)),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        ),
+                        Navigator.pop(context),
+                      }
+                    else
+                      {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.red,
+                            content: Text(
+                                "Failed to register user!, try another email or password.",
+                                style: TextStyle(color: Colors.white)),
+                            duration: Duration(seconds: 2),
+                          ),
+                        ),
+                      }
+                  });
             },
             style: ElevatedButton.styleFrom(
               backgroundColor:
@@ -127,10 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
+              Navigator.pop(context);
             },
             child: Text(
               'Login',

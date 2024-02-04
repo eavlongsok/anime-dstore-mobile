@@ -1,7 +1,7 @@
 // ignore_for_file: library_private_types_in_public_api, avoid_print
 
 import 'package:anime_dstore_mobile/main.dart';
-import 'package:anime_dstore_mobile/models/user.dart';
+import 'package:anime_dstore_mobile/models/User.dart';
 import 'package:anime_dstore_mobile/register.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,8 +14,53 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  String email = "";
-  String password = "";
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String emailErrorMessage = "";
+  String passwordErrorMessage = "";
+
+  // dispose is used to clean up resources
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool validateEmail(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        emailErrorMessage = "Email is required";
+      });
+      return false;
+    }
+
+    if (!value.contains("@")) {
+      setState(() {
+        emailErrorMessage = "Email is invalid";
+      });
+      return false;
+    }
+
+    setState(() {
+      emailErrorMessage = "";
+    });
+    return true;
+  }
+
+  bool validatePassword(String value) {
+    if (value.isEmpty) {
+      setState(() {
+        passwordErrorMessage = "Password is required";
+      });
+      return false;
+    }
+
+    setState(() {
+      passwordErrorMessage = "";
+    });
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => {
                 if (Navigator.canPop(context))
                   {Navigator.pop(context)}
@@ -63,17 +108,20 @@ class _LoginPageState extends State<LoginPage> {
                 color: Colors.grey[200],
               ),
               child: TextField(
-                onChanged: (value) => email = value,
-                decoration: const InputDecoration(
-                  prefixIconConstraints: BoxConstraints(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  prefixIconConstraints: const BoxConstraints(
                     minWidth: 30,
                     minHeight: 20,
                   ),
                   isDense: true,
+                  errorText: emailErrorMessage,
+                  // make error outside of the input
+                  errorStyle: const TextStyle(height: 0),
                   hintText: 'Email',
                   border: InputBorder.none,
                   contentPadding:
-                      EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 ),
               ),
             ),
@@ -91,17 +139,23 @@ class _LoginPageState extends State<LoginPage> {
                 color: Colors.grey[200],
               ),
               child: TextField(
-                onChanged: (value) => password = value,
-                decoration: const InputDecoration(
-                  prefixIconConstraints: BoxConstraints(
+                autocorrect: false,
+                obscureText: true,
+                enableSuggestions: false,
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  prefixIconConstraints: const BoxConstraints(
                     minWidth: 30,
                     minHeight: 20,
                   ),
                   isDense: true,
+                  errorText: passwordErrorMessage,
+                  // make error outside of the input
+                  errorStyle: const TextStyle(height: 0),
                   hintText: 'Password',
                   border: InputBorder.none,
                   contentPadding:
-                      EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 ),
               ),
             ),
@@ -110,6 +164,17 @@ class _LoginPageState extends State<LoginPage> {
             ),
             ElevatedButton(
               onPressed: () {
+                final String email = _emailController.text;
+                final String password = _passwordController.text;
+
+                validateEmail(email);
+                validatePassword(password);
+
+                if (emailErrorMessage.isNotEmpty ||
+                    passwordErrorMessage.isNotEmpty) {
+                  return;
+                }
+
                 login(email, password).then((value) => {
                       if (value.email.isNotEmpty && value.id > 0)
                         {appProvider.setUser(value), Navigator.pop(context)}

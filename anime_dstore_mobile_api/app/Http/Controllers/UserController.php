@@ -11,12 +11,12 @@ class UserController extends Controller
     public function changePassword(Request $request)
     {
         // Validation
-        
+
         $request->validate([
-            'user_id' => 'required|integer',
-            'new_password' => 'required|string|min:8',
+            'user_id' => 'required',
+            'new_password' => 'required',
         ]);
-        return response()->json(['success' => true]);
+
         // Check if user exists
         $user = DB::table('user')->where('id', $request->user_id)->first();
 
@@ -27,17 +27,17 @@ class UserController extends Controller
         // Change the password
         DB::table('user')
             ->where('id', $request->user_id)
-            ->update(['password' => Hash::make($request->new_password)]);
+            ->update(['password' => $request->new_password]);
 
         // Return a JSON response with the success status
-        return response()->json(['success' => true]);
+        return response()->json(['success' => true], 200);
     }
 
     public function clearHistory(Request $request)
     {
         // Validation
         $request->validate([
-            'user_id' => 'required|integer',
+            'user_id' => 'required',
         ]);
 
         // Check if user exists
@@ -58,7 +58,7 @@ class UserController extends Controller
     {
         // Validation
         $request->validate([
-            'user_id' => 'required|integer',
+            'user_id' => 'required',
         ]);
 
         // Check if user exists
@@ -72,10 +72,29 @@ class UserController extends Controller
         $history = DB::table('history')
             ->join('item', 'history.item_id', '=', 'item.id')
             ->where('history.user_id', $request->user_id)
-            ->select('history.id', 'item.name', 'item.category', 'item.image', 'item.price', 'history.quantity')
-            ->get();
+            ->select('history.id', 'item.name', 'item.category', 'item.image', 'item.price', 'item.description', 'history.quantity')
+            ->get()->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'quantity' => $row->quantity,
+                    'item' => [
+                        'id' => $row->id,
+                        'name' => $row->name,
+                        'category' => $row->category,
+                        'image' => $row->image,
+                        'price' => $row->price,
+                        'description' => $row->description,
+                    ],
+                ];
+            });
 
         // Return the history as a JSON response
-        return response()->json($history);
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'purchaseHistory' => $history,
+            ],
+            'message' => 'History retrieved successfully.',
+        ], 200);
     }
 }
