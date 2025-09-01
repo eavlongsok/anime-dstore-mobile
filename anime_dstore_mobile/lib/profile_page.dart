@@ -28,7 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
       return Scaffold(
         appBar: AppBar(
           scrolledUnderElevation: 0,
-          backgroundColor: Theme.of(context).colorScheme.background,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           leading: IconButton(
             onPressed: () {
               Navigator.pop(context);
@@ -229,7 +229,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (BuildContext context) {
         // alert dialog is considered as input dialog
         return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.background,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           surfaceTintColor: Colors.transparent,
           title: const Text(
             "Clear History",
@@ -304,7 +304,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (BuildContext context) {
         // alert dialog is considered as input dialog
         return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.background,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           surfaceTintColor: Colors.transparent,
           title: const Text(
             "Change Password",

@@ -54,7 +54,7 @@ class _ItemDetailPageState extends State<ItemDetailPage> {
       return Scaffold(
           appBar: AppBar(
             scrolledUnderElevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             leading: IconButton(
               onPressed: () {
                 Navigator.pop(context);

@@ -128,9 +128,10 @@ class MyApp extends StatelessWidget {
         // Use colorScheme to define custom colors
         colorScheme: ColorScheme.light(
           primary: myPrimaryColor,
-          background: mySecondaryColor,
+          surface: mySecondaryColor, // Changed from background to surface
           // You can customize other color properties here
         ),
+        scaffoldBackgroundColor: mySecondaryColor, // Set default scaffold background
       ),
       home: const MyHomePage(),
     );
@@ -154,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return Scaffold(
           appBar: AppBar(
             scrolledUnderElevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.background,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             title: const Text(
               'Anime D. Store',
               style: TextStyle(
@@ -191,7 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
               width: double.infinity,
               // Add the Drawer widget here
               child: Container(
-                color: Theme.of(context).colorScheme.background,
+                color: Theme.of(context).colorScheme.surface,
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
@@ -419,7 +420,7 @@ class _MyHomePageState extends State<MyHomePage> {
               )),
           body: SingleChildScrollView(
             child: Container(
-              color: Theme.of(context).colorScheme.background,
+              color: Theme.of(context).colorScheme.surface,
               child: Column(
                 children: [
                   Padding(
@@ -502,7 +503,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (BuildContext context) {
         return SimpleDialog(
-          backgroundColor: Theme.of(context).colorScheme.background,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           surfaceTintColor: Colors.transparent,
           title: const Text(
             'Check Out Success',
@@ -600,7 +601,7 @@ class CartItem extends StatelessWidget {
                 // use stateful builder to update the quantity modal state otherwise the quantity will not update the ui
                 return StatefulBuilder(builder: (context, setModalState) {
                   return Container(
-                      color: Theme.of(context).colorScheme.background,
+                      color: Theme.of(context).colorScheme.surface,
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
