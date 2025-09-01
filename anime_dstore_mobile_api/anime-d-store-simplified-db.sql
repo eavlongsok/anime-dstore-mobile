@@ -1,0 +1,19 @@
+CREATE TABLE `user`(
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `email` VARCHAR(255) NOT NULL,
+    `password` VARCHAR(255) NOT NULL
+);
+CREATE TABLE `history`(
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `item_id` INT NOT NULL,
+    `quantity` INT NOT NULL
+);
+CREATE TABLE `item`(
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(255) NOT NULL,
+    `category` INT NOT NULL,
+    `description` TEXT NOT NULL,
+    `price` DOUBLE NOT NULL,
+    `image` VARCHAR(255) NOT NULL
+);

@@ -2,8 +2,8 @@
 
 import 'package:anime_dstore_mobile/login.dart';
 import 'package:anime_dstore_mobile/main.dart';
-import 'package:anime_dstore_mobile/models/Item.dart';
-import 'package:anime_dstore_mobile/models/Cart.dart';
+import 'package:anime_dstore_mobile/models/item.dart';
+import 'package:anime_dstore_mobile/models/cart.dart';
 import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

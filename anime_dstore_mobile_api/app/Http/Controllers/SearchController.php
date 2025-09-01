@@ -15,7 +15,7 @@ class SearchController extends Controller
             $q = $request->input('q');
             $categories = $request->input('categories');
 
-            $result = Item::where('name', 'ilike', '%' . $q . '%')
+            $result = Item::where('name', 'like', '%' . $q . '%')
                 // if categories is not empty, filter by categories
                 ->when($categories, function ($query, $categories) {
                     return $query->whereIn('category', $categories);

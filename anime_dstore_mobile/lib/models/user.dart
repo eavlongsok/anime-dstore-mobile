@@ -1,5 +1,5 @@
-import 'package:anime_dstore_mobile/models/Item.dart';
-import 'package:anime_dstore_mobile/models/Item.dart';
+import 'package:anime_dstore_mobile/models/item.dart';
+import 'package:anime_dstore_mobile/models/item.dart';
 import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -92,6 +92,8 @@ Future<bool> changePassword(int userId, String newPassword) async {
 Future<bool> register(String email, String password) async {
   final response = await http.post(Uri.parse(
       '$externalApiUrl/api/register?email=$email&password=$password'));
+  // log
+  print('register user response body: ${response.body}');
   if (response.statusCode == 200) {
     return true;
   }

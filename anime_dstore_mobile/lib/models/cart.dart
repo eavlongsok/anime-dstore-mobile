@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:anime_dstore_mobile/models/Item.dart';
+import 'package:anime_dstore_mobile/models/item.dart';
 import 'package:anime_dstore_mobile/utils/index.dart';
 import 'package:http/http.dart' as http;
 

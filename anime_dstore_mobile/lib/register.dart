@@ -2,7 +2,7 @@
 
 import 'package:anime_dstore_mobile/login.dart';
 import 'package:anime_dstore_mobile/main.dart';
-import 'package:anime_dstore_mobile/models/User.dart';
+import 'package:anime_dstore_mobile/models/user.dart';
 import 'package:flutter/material.dart';
 
 // ignore: use_key_in_widget_constructors
